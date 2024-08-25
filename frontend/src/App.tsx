@@ -1,19 +1,56 @@
-import wailsLogo from './assets/wails.png'
-import './App.css'
+// @ts-nocheck
+import {Button, Card, Row, Typography, Upload, UploadFile, UploadProps} from "antd";
+import React, {useState} from "react";
+
+const {Title} = Typography;
 
 function App() {
+
+    const [fileList, setFileList] = useState<UploadFile[]>([]);
+    const [uploading, setUploading] = useState(false);
+
+    const handleUpload = () => {
+    }
+
+    const props: UploadProps = {
+        onRemove: (file) => {
+            const index = fileList.indexOf(file);
+            const newFileList = fileList.slice();
+            newFileList.splice(index, 1);
+            setFileList(newFileList);
+        },
+        beforeUpload: (file) => {
+            setFileList([...fileList, file]);
+
+            return false;
+        },
+        fileList,
+    };
+
     return (
-        <div className="min-h-screen bg-white grid grid-cols-1 place-items-center justify-items-center mx-auto py-8">
-            <div className="text-blue-900 text-2xl font-bold font-mono">
-                <h1 className="content-center">Vite + React + TS + Tailwind</h1>
-            </div>
-            <div className="w-fit max-w-md">
-                <a href="https://wails.io" target="_blank">
-                    <img src={wailsLogo} className="logo wails" alt="Wails logo" />
-                </a>
-            </div>
+        <div>
+            <Row justify='center'>
+                <Card title='Qiniu Upload' bordered={false} style={{height: '80%', width: '50%'}} justify='center'>
+                    <Row justify='center'>
+                        <Upload {...props}>
+                            <Button>Select File</Button>
+                        </Upload>
+                    </Row>
+                    <Row justify='center'>
+                        <Button
+                            type="primary"
+                            onClick={handleUpload}
+                            disabled={fileList.length === 0}
+                            loading={uploading}
+                            style={{marginTop: 16}}
+                        >
+                            {uploading ? 'Uploading' : 'Start Upload'}
+                        </Button>
+                    </Row>
+                </Card>
+            </Row>
         </div>
-    )
+    );
 }
 
-export default App
+export default App;
