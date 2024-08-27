@@ -1,0 +1,27 @@
+dev:
+	wails dev -appargs "debug"
+
+build:
+	wails build -clean
+	cp config.yaml build/bin/qiniu-upload.app/Contents/Resources/
+
+define check
+	command -v $(1) 1>/dev/null || $(2)
+endef
+
+pkg: build
+	@@$(call check,create-dmg,brew install create-dmg)
+	create-dmg \
+         --volname "qiniu-upload" \
+         --background "build/bg.svg" \
+         --window-pos 400 200 \
+         --window-size 660 400 \
+         --icon-size 100 \
+         --icon "qiniu-upload.app" 160 185 \
+         --hide-extension "qiniu-upload.app" \
+         --app-drop-link 500 185 \
+         "build/bin/qiniu-upload.dmg" \
+         "build/bin/qiniu-upload.app"
+
+
+.PHONY:dev build pkg

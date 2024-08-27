@@ -11,6 +11,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 type AppConfig struct {
@@ -36,7 +37,14 @@ func NewApp() *App {
 // OnStartup 启动读取配置文件
 func (a *App) OnStartup(ctx context.Context) {
 	a.ctx = ctx
-	config, err := os.Open("./config.yaml")
+
+	execPath, _ := os.Executable()
+	configPath := filepath.Join(filepath.Dir(execPath), "../Resources/config.yaml")
+	if len(os.Args) > 1 && os.Args[1] == "debug" {
+		configPath = "./config.yaml"
+	}
+
+	config, err := os.Open(configPath)
 	if err != nil {
 		panic("打开配置文件失败: " + err.Error())
 		return
@@ -46,6 +54,8 @@ func (a *App) OnStartup(ctx context.Context) {
 	if err != nil {
 		panic("解析配置文件失败: " + err.Error())
 	}
+	fmt.Println(configPath)
+	fmt.Println(a.Config)
 }
 
 // beforeClose is called when the application is about to quit,

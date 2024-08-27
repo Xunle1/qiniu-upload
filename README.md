@@ -1,26 +1,29 @@
-## About
+# qiniu-upload
 
-Wails template which includes: Vite, React, TS, TailwindCSS out of the box.
+批量上传图片到七牛云
 
-Build with `Wails CLI v2.0.0`.
+## 构建项目
 
-To use this [template](https://wails.io/docs/community/templates):
-```shell
-wails init -n "Your Project Name" -t https://github.com/hotafrika/wails-vite-react-ts-tailwind-template
-cd frontend/src
-npm install
+环境要求参考：[Wails Installation](https://wails.io/docs/gettingstarted/installation)
+
+### 运行
+
+``` shell
+git clone git@github.com:Xunle1/qiniu-upload.git
+
+cd qiniu-upload
 ```
 
-[Here](scripts) you can find useful scripts for building on different platforms and Wails CLI installation.
+在 `config.yaml` 设置七牛云相关配置
 
-## Live Development
+```shell
+make dev
+```
 
-To run in live development mode, run `wails dev` in the project directory. In another terminal, go into the `frontend`
-directory and run `npm run dev`. The frontend dev server will run on http://localhost:34115. Connect to this in your
-browser and connect to your application.
+### 构建
 
-## Building
+```
+make build
+```
 
-To build a redistributable, production mode package, use `wails build`.
-
-
+应用在 `build/bin` 目录下
