@@ -5,8 +5,10 @@ go 1.21
 toolchain go1.22.2
 
 require (
+	github.com/labstack/gommon v0.4.0
 	github.com/qiniu/go-sdk/v7 v7.21.1
 	github.com/wailsapp/wails/v2 v2.9.1
+	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
@@ -19,7 +21,6 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/jchv/go-winloader v0.0.0-20210711035445-715c2860da7e // indirect
 	github.com/labstack/echo/v4 v4.10.2 // indirect
-	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/leaanthony/go-ansi-parser v1.6.0 // indirect
 	github.com/leaanthony/gosod v1.0.3 // indirect
 	github.com/leaanthony/slicer v1.6.0 // indirect

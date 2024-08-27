@@ -1,10 +1,10 @@
 // @ts-nocheck
-import {Button, Card, Image, Input, List, message, Row, Space, Typography, Upload, UploadFile, UploadProps} from "antd";
+import {Button, Card, Image, Input, List, message, Row, Space, Typography, UploadFile} from "antd";
 import React, {useState} from "react";
 
-import {Upload as UploadApi} from '../wailsjs/go/main/App'
+import {BatchSelectFiles as BatchSelectAPI, GetDomain, Upload as UploadAPI} from '../wailsjs/go/main/App'
 
-const {Title} = Typography
+const {Title, Text} = Typography
 
 function App() {
 
@@ -13,13 +13,31 @@ function App() {
     const [resultList, setResultList] = useState<Array<string>>([]);
     const [hideResult, setHideResult] = useState(true);
     const [targetPath, setTargetPath] = useState("")
+    const [bucket, setBucket] = useState("")
+    const [domain, setDomain] = useState("")
 
-    const bucket = "codeffect"
+    GetDomain().then(resp => {
+        setDomain(resp)
+    }).catch(err => {
+            message.error(err)
+        }
+    )
+
+    const handleBatchFile = () => {
+        BatchSelectAPI().then(resp => {
+            setFileList(resp)
+        }).catch(err => {
+            message.error(err)
+        }).finally(() => {
+            setUploading(false)
+        })
+    }
 
     const handleUpload = () => {
         setUploading(true)
-        UploadApi(targetPath, fileList).then((response) => {
-            setResultList(response)
+        UploadAPI(bucket, targetPath).then(resp => {
+            setResultList(resp)
+            message.success("上传成功")
         }).catch(err => {
             message.error(err);
         }).finally(() => {
@@ -27,25 +45,6 @@ function App() {
             setHideResult(false)
         })
     }
-
-    const props: UploadProps = {
-        onRemove: (file) => {
-            const index = fileList.indexOf(file);
-            const newFileList = fileList.slice();
-            newFileList.splice(index, 1);
-            setFileList(newFileList);
-        },
-        beforeUpload: (file) => {
-            if (file.type !== 'image/png' && file.type !== 'image/gif' && file.type !== 'image/jpg') {
-                message.error(`需要图片嗷`);
-                return false
-            }
-            setFileList([...fileList, file]);
-            return false;
-        },
-        listType: "picture",
-        fileList,
-    };
 
     return (
         <div>
@@ -59,23 +58,47 @@ function App() {
                     <Row style={{marginBottom: 20, display: 'flex'}}>
                         <Space direction='vertical' size='middle' style={{width: '100%'}}>
                             <Space.Compact style={{width: '100%'}}>
-                                <Input addonBefore={bucket}
-                                       placeholder='请输入上传路径，比如：/suki/promote/' value={targetPath}
+                                <Input addonBefore="Bucket 桶名称"
+                                       placeholder='请输入 Bucket 桶名称，比如: codeffect'
+                                       value={bucket}
+                                       onChange={e => {
+                                           setBucket(e.target.value)
+                                       }}/>
+                            </Space.Compact>
+                            <Space.Compact style={{width: '100%'}}>
+                                <Input addonBefore="上传路径"
+                                       placeholder='请输入上传路径，比如：suki/promote/，注意斜杠。' value={targetPath}
                                        onChange={e => {
                                            setTargetPath(e.target.value)
                                        }}/>
                             </Space.Compact>
                             <Space.Compact>
-                                <b>地址预览：</b> $PATH_PREFIX/{targetPath}{targetPath === '' ? '' : '/foo.png'}
+                                <b>地址预览：</b> {domain}/{targetPath === '' ? '' : targetPath + '/'}foo.jpg
                             </Space.Compact>
                         </Space>
                     </Row>
-                    <Row>
-                        <Upload {...props}>
-                            <Button>选择文件</Button>
-                        </Upload>
+                    <Row style={{marginBottom: 10}}>
+                        <Button onClick={handleBatchFile}>
+                            选择文件
+                        </Button>
+                    </Row>
+                    <Row style={{marginBottom: 20}}>
+                        <Text>图片格式: <Text strong>*.png;*.jpg;*.jpeg;*.gif</Text></Text>
                     </Row>
                     <Row>
+                        <List
+                            style={{width: '100%'}}
+                            header="文件列表"
+                            itemLayout="vertical"
+                            size="large"
+                            bordered
+                            dataSource={fileList}
+                            renderItem={(item) => (
+                                <List.Item>{item}</List.Item>
+                            )}
+                        />
+                    </Row>
+                    <Row style={{marginBottom: 20}}>
                         <Button
                             type="primary"
                             onClick={handleUpload}
@@ -110,8 +133,7 @@ function App() {
                 </Card>
             </Row>
         </div>
-    )
-        ;
+    );
 }
 
 export default App;

@@ -4,15 +4,28 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/labstack/gommon/log"
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"gopkg.in/yaml.v2"
 	"io"
-	"mime/multipart"
+	"os"
 )
+
+type AppConfig struct {
+	Qiniu struct {
+		Domain    string `yaml:"domain"`
+		AccessKey string `yaml:"accessKey"`
+		SecretKey string `yaml:"secretKey"`
+	}
+}
 
 // App struct
 type App struct {
-	ctx context.Context
+	ctx       context.Context
+	Config    AppConfig
+	FilePaths []string
 }
 
 // NewApp creates a new App application struct
@@ -20,15 +33,19 @@ func NewApp() *App {
 	return &App{}
 }
 
-// startup is called at application startup
-func (a *App) startup(ctx context.Context) {
-	// Perform your setup here
+// OnStartup 启动读取配置文件
+func (a *App) OnStartup(ctx context.Context) {
 	a.ctx = ctx
-}
-
-// domReady is called after front-end resources have been loaded
-func (a App) domReady(ctx context.Context) {
-	// Add your action here
+	config, err := os.Open("./config.yaml")
+	if err != nil {
+		panic("打开配置文件失败: " + err.Error())
+		return
+	}
+	data, err := io.ReadAll(config)
+	err = yaml.Unmarshal(data, &a.Config)
+	if err != nil {
+		panic("解析配置文件失败: " + err.Error())
+	}
 }
 
 // beforeClose is called when the application is about to quit,
@@ -38,37 +55,40 @@ func (a *App) beforeClose(ctx context.Context) (prevent bool) {
 	return false
 }
 
-// shutdown is called at application termination
-func (a *App) shutdown(ctx context.Context) {
-	// Perform your teardown here
-}
-
 // Upload Greet returns a greeting for the given name
-func (a *App) Upload(path string, files []*multipart.FileHeader) (urls []string, err error) {
-	for _, file := range files {
-		fmt.Println(file)
-	}
-	for _, file := range files {
-		f, err := file.Open()
+func (a *App) Upload(bucket string, uploadPath string) (urls []string, err error) {
+	for _, filePath := range a.FilePaths {
+		file, err := os.Open(filePath)
 		if err != nil {
+			log.Error(err)
 			return nil, err
 		}
-
-		key := fmt.Sprintf("%s/%s", path, file.Filename)
-		err = qiniuUpload(f, file.Size, key)
+		stat, err := file.Stat()
 		if err != nil {
+			log.Error(err)
 			return nil, err
 		}
+		key := fmt.Sprintf("%s/%s", uploadPath, stat.Name())
+		if len(uploadPath) == 0 {
+			key = stat.Name()
+		}
+		err = a.qiniuUpload(bucket, file, stat.Size(), key)
+		if err != nil {
+			log.Error(err)
+			return nil, err
+		}
+		urls = append(urls, fmt.Sprintf("%s/%s", a.Config.Qiniu.Domain, key))
 	}
 	return
 }
 
-func qiniuUpload(data io.Reader, fileSize int64, key string) error {
+func (a *App) qiniuUpload(bucket string, data io.Reader, fileSize int64, key string) error {
 	putPolicy := storage.PutPolicy{
-		Scope: fmt.Sprintf("%s:%s", "", key), //覆盖上传
+		Scope:      bucket, // 新增上传
+		InsertOnly: 1,
 	}
-	accessKey := "your access key"
-	secretKey := "your secret key"
+	accessKey := a.Config.Qiniu.AccessKey
+	secretKey := a.Config.Qiniu.SecretKey
 	mac := auth.New(accessKey, secretKey)
 	upToken := putPolicy.UploadToken(mac)
 	cfg := storage.Config{}
@@ -83,7 +103,40 @@ func qiniuUpload(data io.Reader, fileSize int64, key string) error {
 
 	err := formUploader.Put(context.Background(), &ret, upToken, key, data, fileSize, nil)
 	if err != nil {
-		return errors.New("upload " + err.Error())
+		log.Error(err)
+		return errors.New("upload failed: " + err.Error())
 	}
 	return nil
+}
+
+func (a *App) BatchSelectFiles() ([]string, error) {
+	files, err := runtime.OpenMultipleFilesDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "选择图片",
+		Filters: []runtime.FileFilter{{
+			DisplayName: "Images (*.png;*.jpg;*.jpeg;*.gif)",
+			Pattern:     "*.png;*.jpg;*.jpeg;*.gif",
+		}},
+	})
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	if len(files) == 0 {
+		return nil, errors.New("请选择至少一张图片")
+	}
+	var resp []string
+	a.FilePaths = a.FilePaths[0:0]
+	for _, file := range files {
+		a.FilePaths = append(a.FilePaths, file)
+		resp = append(resp, file)
+	}
+	return resp, nil
+}
+
+func (a *App) GetDomain() (string, error) {
+	if a.Config.Qiniu.Domain == "" {
+		return "", errors.New("域名获取失败")
+	}
+	return a.Config.Qiniu.Domain, nil
 }
