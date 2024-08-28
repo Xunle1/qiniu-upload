@@ -35,10 +35,15 @@ function App() {
         })
     }
 
+    const handleClear = () => {
+        setFileList([])
+    }
+
     const handleUpload = () => {
         setUploading(true)
         UploadAPI(bucket, targetPath).then(resp => {
             setResultList(resp)
+            handleClear()
             message.success("上传成功")
         }).catch(err => {
             message.error(err);
@@ -82,6 +87,9 @@ function App() {
                     <Row style={{marginBottom: 10}}>
                         <Button onClick={handleBatchFile}>
                             选择文件
+                        </Button>
+                        <Button style={{marginLeft: 20}} onClick={handleClear}>
+                            清空列表
                         </Button>
                     </Row>
                     <Row style={{marginBottom: 20}}>
