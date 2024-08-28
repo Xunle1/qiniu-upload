@@ -27,7 +27,9 @@ function App() {
         BatchSelectAPI().then(resp => {
             setFileList(resp)
         }).catch(err => {
-            message.error(err)
+            if (fileList.length === 0) {
+                message.error(err)
+            }
         }).finally(() => {
             setUploading(false)
         })
