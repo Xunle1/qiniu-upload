@@ -91,6 +91,9 @@ Section
     CreateShortcut "$SMPROGRAMS\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
     CreateShortCut "$DESKTOP\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
 
+    SetOutPath "$INSTDIR"
+    File "config.yaml"
+
     !insertmacro wails.associateFiles
     !insertmacro wails.associateCustomProtocols
 

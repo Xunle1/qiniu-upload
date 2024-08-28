@@ -12,6 +12,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	r "runtime"
 )
 
 type AppConfig struct {
@@ -40,6 +41,9 @@ func (a *App) OnStartup(ctx context.Context) {
 
 	execPath, _ := os.Executable()
 	configPath := filepath.Join(filepath.Dir(execPath), "../Resources/config.yaml")
+	if r.GOOS == "windows" {
+		configPath = filepath.Join(filepath.Dir(execPath), "./config.yaml")
+	}
 	if len(os.Args) > 1 && os.Args[1] == "debug" {
 		configPath = "./config.yaml"
 	}

@@ -3,13 +3,22 @@ dev:
 
 build:
 	wails build -clean
+
+build-darwin-arm64:
+	wails build -clean
 	cp config.yaml build/bin/qiniu-upload.app/Contents/Resources/
+
+build-windows-amd64:
+	wails build -clean -platform 'windows/amd64'
+
+build-windows-arm64:
+	wails build -clean -platform 'windows/arm64'
 
 define check
 	command -v $(1) 1>/dev/null || $(2)
 endef
 
-pkg: build
+pkg-darwin-arm64: build-darwin-arm64
 	@@$(call check,create-dmg,brew install create-dmg)
 	create-dmg \
          --volname "qiniu-upload" \
@@ -23,5 +32,12 @@ pkg: build
          "build/bin/qiniu-upload.dmg" \
          "build/bin/qiniu-upload.app"
 
+pkg-windows-amd64:
+	cp config.yaml build/windows/installer
+	wails build -clean -platform 'windows/amd64' -nsis
 
-.PHONY:dev build pkg
+pkg-windows-arm64:
+	cp config.yaml build/windows/installer
+	wails build -clean -platform 'windows/arm64' -nsis
+
+.PHONY:dev build-darwin-arm64 build-windows-amd64 build-windows-arm64 pkg-darwin-arm64 pkg-windows-amd64 pkg-windows-arm64

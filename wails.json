@@ -8,5 +8,12 @@
   "author": {
     "name": "xunle",
     "email": "xunle1121@gmail.com"
+  },
+  "info": {
+    "companyName": "xunle",
+    "productName": "qiniu-upload",
+    "productVersion": "1.0.0",
+    "copyright": "Copyright (c) [2024] [xunle]",
+    "comments": "Built using Wails (https://wails.io)"
   }
 }
