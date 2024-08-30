@@ -6,8 +6,8 @@ export function BatchSelectFiles() {
   return window['go']['main']['App']['BatchSelectFiles']();
 }
 
-export function GetDomain() {
-  return window['go']['main']['App']['GetDomain']();
+export function SetConfig(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SetConfig'](arg1, arg2, arg3);
 }
 
 export function Upload(arg1, arg2) {

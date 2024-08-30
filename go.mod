@@ -8,7 +8,6 @@ require (
 	github.com/labstack/gommon v0.4.0
 	github.com/qiniu/go-sdk/v7 v7.21.1
 	github.com/wailsapp/wails/v2 v2.9.1
-	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (

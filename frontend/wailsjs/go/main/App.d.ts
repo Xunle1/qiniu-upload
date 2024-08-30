@@ -3,6 +3,6 @@
 
 export function BatchSelectFiles():Promise<Array<string>>;
 
-export function GetDomain():Promise<string>;
+export function SetConfig(arg1:string,arg2:string,arg3:string):Promise<void>;
 
 export function Upload(arg1:string,arg2:string):Promise<Array<string>>;

@@ -1,27 +1,62 @@
 // @ts-nocheck
-import { Button, Card, Image, Input, List, message, Row, Space, Typography, UploadFile } from 'antd';
+import {
+  Button,
+  Card,
+  Input,
+  List,
+  message,
+  Image,
+  Modal,
+  Row,
+  Space,
+  Typography,
+  UploadFile,
+} from 'antd';
+
+import { SettingOutlined } from '@ant-design/icons';
 import React, { useState } from 'react';
 
-import { BatchSelectFiles as BatchSelectAPI, GetDomain, Upload as UploadAPI } from '../wailsjs/go/main/App';
+import {
+  BatchSelectFiles as BatchSelectAPI,
+  Upload as UploadAPI,
+  SetConfig as SetConfigAPI,
+} from '../wailsjs/go/main/App';
 
 const { Title, Text } = Typography;
 
 function App() {
-  const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [resultList, setResultList] = useState<Array<string>>([]);
   const [hideResult, setHideResult] = useState(true);
+  const [visible, setVisible] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+
   const [targetPath, setTargetPath] = useState('');
   const [bucket, setBucket] = useState('');
   const [domain, setDomain] = useState('');
+  const [accessKey, setAccessKey] = useState('');
+  const [secretKey, setSecretKey] = useState('');
 
-  GetDomain()
-    .then(resp => {
-      setDomain(resp);
-    })
-    .catch(err => {
-      message.error(err);
-    });
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [resultList, setResultList] = useState<Array<string>>([]);
+
+  const showModal = () => {
+    setModalOpen(true);
+  };
+
+  const cancelModal = () => {
+    setModalOpen(false);
+  };
+
+  const saveSettings = () => {
+    SetConfigAPI(domain, accessKey, secretKey)
+      .then(() => {
+        message.success('保存成功');
+        setModalOpen(false);
+      })
+      .catch(e => {
+        message.error(e);
+      });
+  };
 
   const handleBatchFile = () => {
     BatchSelectAPI()
@@ -66,16 +101,70 @@ function App() {
           <Row align="middle" style={{ marginBottom: 30 }}>
             <Image
               src="https://dn-mars-assets.qbox.me/qiniulogo/normal-logo-blue.png"
-              style={{ maxWidth: '100px', maxHeight: '100px' }}
+              style={{ maxWidth: '100px', maxHeight: '100px', float: 'left' }}
             />
-            <Title>七牛上传</Title>
+            <Title style={{ marginLeft: '10px' }}>七牛上传</Title>
+            <Button
+              style={{ position: 'absolute', right: '10px', top: '10px' }}
+              icon={<SettingOutlined />}
+              onClick={showModal}
+            >
+              上传配置
+            </Button>
+            <Modal
+              title="七牛配置"
+              open={modalOpen}
+              onOk={saveSettings}
+              onCancel={cancelModal}
+              footer={[
+                <Button key="cancel" onClick={cancelModal}>
+                  取消
+                </Button>,
+                <Button type="primary" key="ok" onClick={saveSettings}>
+                  保存
+                </Button>,
+              ]}
+            >
+              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                <Space.Compact style={{ width: '100%' }}>
+                  <Input
+                    addonBefore="AK"
+                    placeholder="请输入 AccessKey"
+                    value={accessKey}
+                    onChange={e => {
+                      setAccessKey(e.target.value);
+                    }}
+                  />
+                </Space.Compact>
+                <Space.Compact style={{ width: '100%' }}>
+                  <Input
+                    addonBefore="SK"
+                    placeholder="请输入 SecretKey"
+                    value={secretKey}
+                    onChange={e => {
+                      setSecretKey(e.target.value);
+                    }}
+                  />
+                </Space.Compact>
+                <Space.Compact style={{ width: '100%' }}>
+                  <Input
+                    addonBefore="域名"
+                    placeholder="请输入域名"
+                    value={domain}
+                    onChange={e => {
+                      setDomain(e.target.value);
+                    }}
+                  />
+                </Space.Compact>
+              </Space>
+            </Modal>
           </Row>
           <Row style={{ marginBottom: 20, display: 'flex' }}>
             <Space direction="vertical" size="middle" style={{ width: '100%' }}>
               <Space.Compact style={{ width: '100%' }}>
                 <Input
-                  addonBefore="Bucket 桶名称"
-                  placeholder="请输入 Bucket 桶名称，比如: codeffect"
+                  addonBefore="bucket"
+                  placeholder="请输入 bucket 桶名"
                   value={bucket}
                   onChange={e => {
                     setBucket(e.target.value);

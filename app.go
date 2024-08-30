@@ -8,25 +8,20 @@ import (
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
-	"gopkg.in/yaml.v2"
 	"io"
 	"os"
-	"path/filepath"
-	r "runtime"
 )
 
-type AppConfig struct {
-	Qiniu struct {
-		Domain    string `yaml:"domain"`
-		AccessKey string `yaml:"accessKey"`
-		SecretKey string `yaml:"secretKey"`
-	}
+type QiniuConfig struct {
+	Domain    string `yaml:"domain"`
+	AccessKey string `yaml:"accessKey"`
+	SecretKey string `yaml:"secretKey"`
 }
 
 // App struct
 type App struct {
 	ctx       context.Context
-	Config    AppConfig
+	Config    QiniuConfig
 	FilePaths []string
 }
 
@@ -38,28 +33,6 @@ func NewApp() *App {
 // OnStartup 启动读取配置文件
 func (a *App) OnStartup(ctx context.Context) {
 	a.ctx = ctx
-
-	execPath, _ := os.Executable()
-	configPath := filepath.Join(filepath.Dir(execPath), "../Resources/config.yaml")
-	if r.GOOS == "windows" {
-		configPath = filepath.Join(filepath.Dir(execPath), "./config.yaml")
-	}
-	if len(os.Args) > 1 && os.Args[1] == "debug" {
-		configPath = "./config.yaml"
-	}
-
-	config, err := os.Open(configPath)
-	if err != nil {
-		panic("打开配置文件失败: " + err.Error())
-		return
-	}
-	data, err := io.ReadAll(config)
-	err = yaml.Unmarshal(data, &a.Config)
-	if err != nil {
-		panic("解析配置文件失败: " + err.Error())
-	}
-	fmt.Println(configPath)
-	fmt.Println(a.Config)
 }
 
 // beforeClose is called when the application is about to quit,
@@ -91,7 +64,7 @@ func (a *App) Upload(bucket string, uploadPath string) (urls []string, err error
 			log.Error(err)
 			return nil, err
 		}
-		urls = append(urls, fmt.Sprintf("%s/%s", a.Config.Qiniu.Domain, key))
+		urls = append(urls, fmt.Sprintf("%s/%s", a.Config.Domain, key))
 	}
 	return
 }
@@ -101,8 +74,8 @@ func (a *App) qiniuUpload(bucket string, data io.Reader, fileSize int64, key str
 		Scope:      bucket, // 新增上传
 		InsertOnly: 1,
 	}
-	accessKey := a.Config.Qiniu.AccessKey
-	secretKey := a.Config.Qiniu.SecretKey
+	accessKey := a.Config.AccessKey
+	secretKey := a.Config.SecretKey
 	mac := auth.New(accessKey, secretKey)
 	upToken := putPolicy.UploadToken(mac)
 	cfg := storage.Config{}
@@ -148,9 +121,20 @@ func (a *App) BatchSelectFiles() ([]string, error) {
 	return resp, nil
 }
 
-func (a *App) GetDomain() (string, error) {
-	if a.Config.Qiniu.Domain == "" {
-		return "", errors.New("域名获取失败")
+func (a *App) SetConfig(ak, sk, domain string) (err error) {
+	if len(domain) == 0 {
+		return errors.New("域名不能为空")
 	}
-	return a.Config.Qiniu.Domain, nil
+	if len(ak) == 0 {
+		return errors.New("accessKey不能为空")
+	}
+	if len(sk) == 0 {
+		return errors.New("secretKey不能为空")
+	}
+	a.Config = QiniuConfig{
+		Domain:    domain,
+		AccessKey: ak,
+		SecretKey: sk,
+	}
+	return
 }
