@@ -5,8 +5,7 @@ build:
 	wails build -clean
 
 build-darwin-arm64:
-	wails build -clean
-	cp config.yaml build/bin/qiniu-upload.app/Contents/Resources/
+	wails build -clean -platform 'darwin/arm64'
 
 build-windows-amd64:
 	wails build -clean -platform 'windows/amd64'
