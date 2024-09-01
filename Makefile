@@ -1,5 +1,5 @@
 dev:
-	wails dev -appargs "debug"
+	wails dev
 
 build:
 	wails build -clean

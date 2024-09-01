@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"os"
+
 	"github.com/labstack/gommon/log"
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
-	"io"
-	"os"
 )
 
 type QiniuConfig struct {
@@ -90,7 +91,6 @@ func (a *App) qiniuUpload(bucket string, data io.Reader, fileSize int64, key str
 
 	err := formUploader.Put(context.Background(), &ret, upToken, key, data, fileSize, nil)
 	if err != nil {
-		log.Error(err)
 		return errors.New("upload failed: " + err.Error())
 	}
 	return nil

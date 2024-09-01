@@ -48,7 +48,7 @@ function App() {
   };
 
   const saveSettings = () => {
-    SetConfigAPI(domain, accessKey, secretKey)
+    SetConfigAPI(accessKey, secretKey, domain)
       .then(() => {
         message.success('保存成功');
         setModalOpen(false);
@@ -137,7 +137,7 @@ function App() {
                   />
                 </Space.Compact>
                 <Space.Compact style={{ width: '100%' }}>
-                  <Input
+                  <Input.Password
                     addonBefore="SK"
                     placeholder="请输入 SecretKey"
                     value={secretKey}
@@ -174,7 +174,7 @@ function App() {
               <Space.Compact style={{ width: '100%' }}>
                 <Input
                   addonBefore="上传路径"
-                  placeholder="请输入上传路径，比如：suki/promote/，注意斜杠。"
+                  placeholder="请输入上传路径，比如：test/hello，注意斜杠。"
                   value={targetPath}
                   onChange={e => {
                     setTargetPath(e.target.value);
