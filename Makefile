@@ -32,11 +32,9 @@ pkg-darwin-arm64: build-darwin-arm64
          "build/bin/qiniu-upload.app"
 
 pkg-windows-amd64:
-	cp config.yaml build/windows/installer
 	wails build -clean -platform 'windows/amd64' -nsis
 
 pkg-windows-arm64:
-	cp config.yaml build/windows/installer
 	wails build -clean -platform 'windows/arm64' -nsis
 
 .PHONY:dev build-darwin-arm64 build-windows-amd64 build-windows-arm64 pkg-darwin-arm64 pkg-windows-amd64 pkg-windows-arm64
